@@ -1,0 +1,10 @@
+.venv/
+.venv312/
+__pycache__/
+*.py[cod]
+*.log
+data/raw/
+data/processed/
+outputs/
+.streamlit/
+__pycache__/

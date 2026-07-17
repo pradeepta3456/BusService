@@ -1,0 +1,93 @@
+# ST5011CEM - Peak-hour traffic demand forecasting.
+# No secrets belong here. Every source used is key-free open government data.
+
+project:
+  title: "When Does the Road Fill?"
+  subtitle: "Forecasting hourly traffic demand on Britain's road network"
+  stakeholder: "Urban Planner / Smart City Team"
+
+sources:
+  # DfT GB Road Traffic Counts, Open Government Licence v3.0.
+  raw_counts: https://storage.googleapis.com/dft-statistics/road-traffic/downloads/data-gov-uk/dft_traffic_counts_raw_counts.zip
+  aadf: https://storage.googleapis.com/dft-statistics/road-traffic/downloads/data-gov-uk/dft_traffic_counts_aadf.zip
+
+paths:
+  raw: data/raw
+  processed: data/processed
+  outputs: outputs
+  database: data/processed/traffic.db
+
+clean:
+  # DfT manual counts run a 12-hour day, 07:00-18:59. Verified empirically:
+  # hours 7..18 each hold exactly 1/12 of the file across all 26 years, while
+  # hours 0,1,3,4,5 hold 8 rows TOTAL - single-year outliers with impossible
+  # flows (5 vehicles at hour 5). Those are source data-entry errors, not a
+  # night-time count, and are dropped.
+  valid_hours: [7, 18]
+  # direction_of_travel arrives with mixed case ('N' vs 'n') and two codes
+  # outside the compass set: C and J. Both are retained but folded to upper case.
+  valid_directions: [N, S, E, W, C, J]
+  # A flow of exactly 0 for every mode on a counted hour is possible on a very
+  # quiet rural link, so zeros are kept. Negative flows would be impossible.
+  min_flow: 0
+
+target:
+  # The dependent variable: total motorised vehicles counted in the hour.
+  column: all_motor_vehicles
+
+split:
+  # Time-aware, by year. Two splits are evaluated and reported together, and the
+  # pairing is the point:
+  #
+  #   primary  - train on everything up to 2019, forecast 2023-2025. This is the
+  #              question a planner actually has, and it asks the model to carry
+  #              a pre-pandemic relationship across a structural break.
+  #   control  - train to 2016, forecast 2017-2019. Same task, no break in the
+  #              middle.
+  #
+  # Reporting only the primary would confound "the model cannot forecast" with
+  # "COVID changed the roads". The control separates them.
+  primary:
+    train_max_year: 2019
+    test_min_year: 2023
+  control:
+    train_max_year: 2016
+    test_min_year: 2017
+    test_max_year: 2019
+
+spark:
+  # local[4] rather than local[*]: an earlier all-core run pinned every core for
+  # 44 minutes and overheated the development machine. Four executor threads roughly
+  # halve the thermal load for well under double the wall time, which is the right
+  # trade on a laptop. Raise to local[*] on a machine with real cooling.
+  master: local[4]
+  # >=4 partitions is a brief requirement; 8 keeps partitions large enough to
+  # avoid task-scheduling overhead while giving each of the 4 threads work.
+  shuffle_partitions: 8
+  # 2g rather than 4g for the same reason. The pipeline never collects the 5.3M-row
+  # table to the driver, so the driver heap only holds aggregates and model state.
+  driver_memory: 2g
+  app_name: GBTrafficPeakForecast
+
+ml:
+  seed: 42
+  cv_folds: 3
+  # Sampling fraction for FULL-DATA model training. 1.0 uses all rows; lower it only
+  # to iterate quickly, and label any reported number as sampled if you do.
+  train_sample_fraction: 1.0
+  # CrossValidator refits the estimator folds x grid times (3 x 4 = 12 fits here).
+  # At full size that dominates the run for a hyperparameter answer that a sample
+  # gives just as well, so tuning runs on a fraction of the training block. Any
+  # number derived from it is reported as sampled.
+  cv_sample_fraction: 0.2
+
+models:
+  # Reduced from the first run (RF 60x10, GBT 40x6) to cut heat. Expect a small
+  # score drop; the report is regenerated from the new results rather than mixing
+  # the two runs' numbers.
+  random_forest:
+    num_trees: 30
+    max_depth: 8
+  gbt:
+    max_iter: 20
+    max_depth: 5

@@ -1,0 +1,11 @@
+# ST5011CEM - Peak-hour traffic demand forecasting (DfT road traffic counts)
+# Python 3.13 / Java 17+ (PySpark 4 requires it). See README.
+pyspark==4.1.1
+pandas==2.3.3
+pyarrow==21.0.0
+requests==2.32.5
+PyYAML==6.0.3
+matplotlib==3.10.6
+numpy==2.3.5
+pytest==8.4.2
+streamlit==1.54.0
