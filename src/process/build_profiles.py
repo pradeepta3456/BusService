@@ -47,7 +47,7 @@ def main() -> int:
             F.round(F.mean("pedal_cycles"), 2).alias("mean_cycles"),
         )
 
-        # Link mean across its own hours -> peak_index. A window rather than a
+        # Link mean across its observed hours -> peak_index. A window rather than a
         # second groupBy + join: one shuffle instead of two.
         link_window = Window.partitionBy("count_point_id")
         profile = (
