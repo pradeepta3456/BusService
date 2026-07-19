@@ -76,7 +76,7 @@ CATEGORICAL_FEATURES = [
 ]
 
 NUMERIC_FEATURES = [
-    # The core signal: the commuter double-peak lives here.
+    # The core signal: the commuter double-peak is captured here.
     "hour",
     "is_weekend",
     "month",
