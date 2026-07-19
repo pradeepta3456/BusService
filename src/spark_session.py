@@ -19,7 +19,7 @@ def get_spark(app_suffix: str | None = None) -> SparkSession:
     spark = (
         SparkSession.builder
         .appName(name)
-        # Configurable rather than hard-coded local[*]: the executor-thread count
+        # Configurable rather than fixed local[*]: the executor-thread count
         # is the main lever on how hard this pins a laptop. See settings.yaml.
         .master(cfg.get("master", "local[*]"))
         # >=4 shuffle partitions is a brief requirement; 8 matches local cores
