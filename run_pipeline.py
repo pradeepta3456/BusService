@@ -1,7 +1,7 @@
 """Run the pipeline end to end, in dependency order.
 
     python run_pipeline.py                  # everything
-    python run_pipeline.py --skip-ml        # measurement + figures only (light)
+    python run_pipeline.py --skip-ml        # measurement + figures only
     python run_pipeline.py --from process   # re-run from the Spark core onward
 
 Stage timings are printed at the end as the brief's Algorithmic Efficiency
