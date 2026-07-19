@@ -46,7 +46,7 @@ def load() -> None:
         points = pd.read_parquet(processed / "dim_count_point.parquet")
         points = points.drop_duplicates(subset=["count_point_id"])
         # A count point whose region is not in dim_region would violate the FK.
-        # Drop and say how many rather than disabling the constraint.
+        # Drop and report how many rather than disabling the constraint.
         known_regions = set(region.region_id)
         before = len(points)
         points.loc[~points.region_id.isin(known_regions), "region_id"] = None
