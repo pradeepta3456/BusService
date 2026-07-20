@@ -83,7 +83,7 @@ def build_stages(scale: bool) -> list:
         )
     )
     if scale:
-        # Only the linear model needs this; trees are scale-invariant.
+        # Only the linear model needs scaling; trees are scale-invariant.
         stages.append(StandardScaler(inputCol="features_raw", outputCol="features", withMean=False))
     return stages
 
