@@ -84,7 +84,7 @@ def test_injection_through_a_numeric_parameter(connection):
     payload = "10; DROP TABLE dim_region"
     try:
         result = queries.peakiest_links(connection, limit=payload)
-        # If it did not raise, it must at least not have run the payload.
+        # If it did not raise, it must still avoid running the payload.
         assert len(result) >= 0
     except Exception:
         pass  # rejected outright - equally acceptable
