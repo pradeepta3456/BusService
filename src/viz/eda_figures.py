@@ -59,7 +59,7 @@ def plot_data_scale(spark) -> None:
     ax.axhline(100_000, linestyle="--", color=RED, linewidth=1.2,
                label="Brief's 100,000-record requirement")
     # Log scale: the fact table is ~9x the next table and ~120x the smallest, so
-    # a linear axis would flatten everything else onto the baseline.
+    # a linear axis would flatten the remaining tables onto the baseline.
     ax.set_yscale("log")
     ax.set_ylabel("Records (log scale)")
     ax.set_title("Ingested Data Scale - DfT Road Traffic Counts (all real, no augmentation)")
