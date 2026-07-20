@@ -83,7 +83,7 @@ def load() -> None:
             "estimation_method", "link_length_km",
         ]]
         # AADF carries rows outside the count years and the CHECK range; keep the
-        # constraint honest by filtering rather than by loosening it.
+        # constraint honest by filtering instead of loosening it.
         aadf = aadf[aadf.year.between(2000, 2100)]
         aadf.to_sql("fact_annual_flow", connection, if_exists="append",
                     index=False, chunksize=50_000)
