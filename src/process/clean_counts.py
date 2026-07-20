@@ -141,7 +141,7 @@ def clean(spark) -> DataFrame:
         .filter(F.col(target).isNotNull() & (F.col(target) >= F.lit(cfg["clean"]["min_flow"])))
         .filter(F.col("latitude").isNotNull() & F.col("longitude").isNotNull())
         # Major/minor is what link_length_km was really encoding; state it
-        # directly instead of letting a null pattern carry it.
+        # directly instead of carrying it through a null pattern.
         .withColumn(
             "is_major_road",
             F.when(F.col("road_category").isin("PA", "TA", "TM", "PM"), 1).otherwise(0),
