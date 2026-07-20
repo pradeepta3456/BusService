@@ -36,7 +36,7 @@ from src.spark_session import get_spark
 
 LOGGER = logging.getLogger("clean_counts")
 
-# Columns kept from the raw counts, selected BY NAME and cast explicitly.
+# Columns retained from the raw counts, selected BY NAME and cast explicitly.
 #
 # Passing an explicit StructType alongside header=True binds columns positionally
 # and silently ignores the header, so any upstream column re-ordering or
