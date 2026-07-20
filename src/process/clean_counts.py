@@ -42,7 +42,7 @@ LOGGER = logging.getLogger("clean_counts")
 # and silently ignores the header, so any upstream column re-ordering or
 # insertion is read as wrong data rather than as an error. Reading header=True
 # with inferSchema=False gives all-string columns in a single pass - no inference
-# scan over 1GB - and the cast then happens by name.
+# scan over 1GB - and casting then happens by name.
 COUNT_COLUMNS: dict[str, str] = {
     "count_point_id": "string",
     "direction_of_travel": "string",
