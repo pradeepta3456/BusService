@@ -101,7 +101,7 @@ def evaluate(name: str, model, test: DataFrame, seconds: float, split_tag: str) 
             labelCol=LABEL_COLUMN, predictionCol="prediction", metricName=metric
         ).evaluate(predictions)
 
-    # Persist a sample of (actual, predicted) for the diagnostic figures. A
+    # Persist a sample of (actual, predicted) for diagnostic figures. A
     # sample, not the lot: the test block is ~1M rows and a scatter plot cannot
     # show more than a few thousand points honestly anyway.
     (
