@@ -94,7 +94,7 @@ def plot_profile_actual_vs_predicted(split_tag: str = "primary") -> None:
 
     ax.set_xlabel("Hour of day")
     ax.set_ylabel("Mean motor vehicles per hour")
-    # Title states what the lines actually show, not what the design hoped.
+    # Title states what the lines actually show, not the intended pattern.
     # Only GBT tracks the curve; the linear model is close to flat, which is the
     # same story its 0.14% skill tells. Every model sits below the actual.
     ax.set_title("Predicted vs Actual Daily Profile (held-out future years)\n"
