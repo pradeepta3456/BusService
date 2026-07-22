@@ -382,6 +382,74 @@ def plot_error_by_road_class() -> None:
     _save(fig, "ml_error_by_road_class.png")
 
 
+def _demand_band_confusion(predictions: pd.DataFrame,
+                           labels: list[str]) -> tuple[pd.DataFrame, pd.DataFrame, float]:
+    quantiles = predictions["actual"].quantile([0.25, 0.50, 0.75]).to_numpy()
+    bins = [-np.inf, *quantiles, np.inf]
+    actual_band = pd.cut(predictions["actual"], bins=bins, labels=labels, include_lowest=True)
+    predicted_band = pd.cut(predictions["prediction"], bins=bins, labels=labels, include_lowest=True)
+
+    matrix = pd.crosstab(actual_band, predicted_band, dropna=False)
+    matrix = matrix.reindex(index=labels, columns=labels, fill_value=0)
+    row_totals = matrix.sum(axis=1).replace(0, np.nan)
+    matrix_pct = matrix.div(row_totals, axis=0) * 100
+    accuracy = np.diag(matrix.to_numpy()).sum() / matrix.to_numpy().sum()
+    return matrix, matrix_pct, accuracy
+
+
+def plot_confusion_metrics(split_tag: str = "primary") -> None:
+    """Regression diagnostic recast as demand-band confusion matrices.
+
+    The model predicts a continuous vehicle count, so this is not a training
+    objective. It is a reporting view: actual and predicted flows are placed into
+    the same quartile-based demand bands to show where errors move traffic into
+    the wrong planning category.
+    """
+    model_names = ["Linear Regression", "Random Forest", "Gradient-Boosted Trees"]
+    labels = ["Low", "Moderate", "High", "Very high"]
+    matrices = []
+    for model_name in model_names:
+        predictions = load_predictions(split_tag, model_name)
+        if predictions is None:
+            continue
+        matrices.append((model_name, *_demand_band_confusion(predictions, labels)))
+
+    if not matrices:
+        return
+
+    fig, axes = plt.subplots(1, len(matrices), figsize=(5.2 * len(matrices) + 0.8, 6.2),
+                             sharey=True, constrained_layout=True)
+    if len(matrices) == 1:
+        axes = [axes]
+
+    image = None
+    for ax, (model_name, matrix, matrix_pct, accuracy) in zip(axes, matrices):
+        image = ax.imshow(matrix_pct, cmap="Blues", vmin=0, vmax=100)
+        ax.set_xticks(range(len(labels)))
+        ax.set_yticks(range(len(labels)))
+        ax.set_xticklabels(labels, rotation=25, ha="right")
+        ax.set_yticklabels(labels)
+        ax.set_xlabel("Predicted demand band")
+        ax.set_title(f"{model_name}\naccuracy {accuracy * 100:.1f}%")
+        for y in range(len(labels)):
+            for x in range(len(labels)):
+                ax.text(x, y, f"{matrix_pct.iloc[y, x]:.0f}%\n({matrix.iloc[y, x]:,})",
+                        ha="center", va="center", fontsize=7.5,
+                        color="white" if matrix_pct.iloc[y, x] > 55 else "#222")
+
+    axes[0].set_ylabel("Actual demand band")
+    fig.suptitle("Demand-Band Confusion Matrices by Model\n"
+                 "quartile bands are computed from each model's actual-flow sample; rows sum to 100%",
+                 fontsize=11)
+    if image is not None:
+        fig.colorbar(image, ax=axes, fraction=0.025, pad=0.03, label="% of actual band")
+
+    target = resolve("outputs") / "ml_confusion_metrics.png"
+    fig.savefig(target, dpi=FIGURE_DPI, bbox_inches="tight")
+    plt.close(fig)
+    LOGGER.info("Wrote %s", target)
+
+
 def main() -> int:
     logging.basicConfig(
         level=logging.INFO, format="%(asctime)s %(levelname)-7s %(message)s", stream=sys.stdout
@@ -399,6 +467,7 @@ def main() -> int:
     plot_lr_coefficients()
     plot_split_profile()
     plot_error_by_road_class()
+    plot_confusion_metrics()
     return 0
 
 
